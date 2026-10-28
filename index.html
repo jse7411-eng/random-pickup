@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 반 모둠 랜덤 뽑기</title>
+<style>
+:root{--ink:#20304a;--muted:#68758b;--line:#e2e8f0;--paper:#fff;--bg:#f4f7fb;--accent:#315ee8;--accent2:#eaf0ff;--good:#16835d;--danger:#bd3948}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Malgun Gothic","맑은 고딕",sans-serif}
+header{background:linear-gradient(120deg,#243b78,#315ee8);color:white;padding:24px clamp(16px,4vw,48px)}
+header .eyebrow{font-size:13px;opacity:.82;letter-spacing:.08em;font-weight:700}h1{margin:5px 0 6px;font-size:clamp(25px,4vw,38px)}header p{margin:0;opacity:.9}
+main{max-width:1250px;margin:22px auto;padding:0 16px 42px;display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:18px}
+.panel,.results-panel{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 24px #20304a0a}
+.panel{padding:20px;height:fit-content}.section-title{font-size:17px;font-weight:800;margin:0 0 13px;display:flex;align-items:center;gap:8px}
+label{display:block;font-size:13px;font-weight:750;margin:13px 0 7px;color:#45536b}
+textarea,input,select{width:100%;font:inherit;border:1px solid #ccd5e3;border-radius:11px;padding:11px 12px;background:#fff;color:var(--ink);outline:none}
+textarea:focus,input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #315ee81a}
+textarea{resize:vertical;min-height:205px;line-height:1.65}
+.help{font-size:12px;color:var(--muted);line-height:1.5;margin:7px 0}
+.count{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;color:var(--muted)}.count strong{color:var(--accent);font-size:16px}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mode{border:1px solid var(--line);padding:10px;border-radius:12px;cursor:pointer;background:white;font-weight:700;text-align:center;font-size:13px}.mode.active{border-color:var(--accent);background:var(--accent2);color:var(--accent)}
+.mode-fields{margin-top:10px}.hidden{display:none!important}
+.inline-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{font:inherit;border:0;border-radius:11px;padding:11px 13px;cursor:pointer;font-weight:800;transition:transform .12s,filter .12s}
+button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--accent);color:white}.secondary{background:#edf1f7;color:#35445d}.outline{background:white;border:1px solid var(--line);color:#35445d}.success{background:#e3f7ee;color:#116a4b}.danger{background:#fff0f0;color:var(--danger)}
+.full{width:100%;margin-top:14px;padding:14px}.privacy{display:flex;gap:8px;font-size:12px;color:var(--muted);line-height:1.5;margin-top:14px}
+.results-panel{padding:20px;min-height:540px}.result-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.result-head h2{margin:0;font-size:22px}.sub{color:var(--muted);font-size:13px;margin-top:5px}
+.status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#edf1f7;color:#56647a;padding:7px 11px;font-size:12px;font-weight:800}.status.done{background:#e3f7ee;color:#116a4b}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.toolbar button{font-size:13px}
+.empty{min-height:360px;border:1.5px dashed #d3dce9;border-radius:16px;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--muted)}
+.empty .emoji{font-size:40px;margin-bottom:12px}.empty h3{color:var(--ink);margin:0 0 7px}
+.group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.group-card{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;animation:pop .3s ease both}
+.group-top{padding:13px 15px;display:flex;justify-content:space-between;align-items:center;font-weight:850}.group-top small{font-size:12px;font-weight:750;opacity:.8}
+.member-list{padding:7px 14px 13px;margin:0;list-style:none}.member-list li{padding:9px 2px;border-bottom:1px solid #edf0f5;font-size:15px;display:flex;gap:9px;align-items:center}.member-list li:last-child{border-bottom:0}.num{color:#8591a4;font-size:12px;min-width:22px}
+.notice{padding:11px 13px;border-radius:11px;background:#fff8e7;color:#8a6111;font-size:13px;margin:12px 0 0;line-height:1.5}
+.toast{margin-top:12px;font-size:13px;color:var(--good);min-height:18px}
+footer{max-width:1250px;padding:0 16px 25px;margin:auto;color:var(--muted);font-size:12px}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:850px){main{grid-template-columns:1fr}.results-panel{min-height:400px}}
+@media print{body{background:white}header{background:white;color:#20304a;padding:0 0 16px}header p,.eyebrow,.panel,.toolbar,.sub,.status,footer,.toast{display:none!important}main{display:block;margin:0;padding:0}.results-panel{border:0;box-shadow:none;padding:0}.group-grid{grid-template-columns:repeat(3,1fr)}.group-card{break-inside:avoid;animation:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">CLASSROOM TOOL · RANDOM GROUP MAKER</div>
+  <h1>🎲 우리 반 모둠 랜덤 뽑기</h1>
+  <p>명단을 넣고, 모둠을 정하고, 공정하게 섞어 보세요.</p>
+</header>
+<main>
+  <section class="panel" aria-label="모둠 설정">
+    <h2 class="section-title">📝 1. 학생 명단 입력</h2>
+    <textarea id="roster" placeholder="예시&#10;1 김하늘&#10;2 이도윤&#10;박서윤&#10;최지우"></textarea>
+    <p class="help">한 줄에 한 명씩 입력하세요. ‘번호 이름’ 또는 이름만 입력할 수 있어요. 같은 이름도 각각 별도 학생으로 처리합니다.</p>
+    <div class="count"><span>입력된 학생</span><strong id="studentCount">0명</strong></div>
+    <div class="btn-row">
+      <button class="secondary" id="sampleBtn">예시 명단</button>
+      <button class="outline" id="clearBtn">명단 지우기</button>
+    </div>
+
+    <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+    <h2 class="section-title">⚙️ 2. 모둠 구성 설정</h2>
+    <div class="mode-grid" role="group" aria-label="구성 방식">
+      <button class="mode active" data-mode="groups">모둠 수 지정</button>
+      <button class="mode" data-mode="size">모둠별 인원 지정</button>
+    </div>
+    <div class="mode-fields" id="groupsField">
+      <label for="groupCount">모둠 수</label>
+      <input type="number" id="groupCount" min="1" step="1" value="6">
+    </div>
+    <div class="mode-fields hidden" id="sizeField">
+      <label for="groupSize">모둠별 인원</label>
+      <input type="number" id="groupSize" min="1" step="1" value="4">
+      <p class="help">마지막 모둠은 남은 학생 수에 따라 더 적을 수 있어요.</p>
+    </div>
+    <label for="groupNames">모둠 이름 (선택)</label>
+    <textarea id="groupNames" style="min-height:78px" placeholder="비워 두면 1모둠, 2모둠…&#10;예: 별빛 모둠&#10;햇살 모둠&#10;바람 모둠"></textarea>
+    <p class="help">이름을 한 줄에 하나씩 입력하세요. 이름이 부족하면 나머지는 자동으로 번호를 붙입니다.</p>
+
+    <button class="primary full" id="drawBtn">🎲 모둠 뽑기</button>
+    <div class="privacy"><span>🔒</span><span>명단은 이 브라우저 안에서만 처리되고 외부 서버로 전송되지 않습니다. 이 기기를 다른 사람과 공유한다면 사용 후 명단을 지워 주세요.</span></div>
+  </section>
+
+  <section class="results-panel" aria-label="모둠 배정 결과">
+    <div class="result-head">
+      <div><h2>모둠 배정 결과</h2><div class="sub" id="resultSummary">아직 배정 결과가 없습니다.</div></div>
+      <span class="status" id="status">배정 전</span>
+    </div>
+    <div class="toolbar">
+      <button class="secondary" id="redrawBtn" disabled>🔄 다시 뽑기</button>
+      <button class="success" id="confirmBtn" disabled>✓ 결과 확정</button>
+      <button class="outline" id="copyBtn" disabled>결과 복사</button>
+      <button class="outline" id="csvBtn" disabled>CSV 저장</button>
+      <button class="outline" id="printBtn" disabled>인쇄</button>
+    </div>
+    <div id="message" class="toast" role="status" aria-live="polite"></div>
+    <div id="resultArea" class="empty">
+      <div><div class="emoji">🧩</div><h3>모둠을 만들어 볼까요?</h3><div>왼쪽에 학생 명단을 입력하고<br>‘모둠 뽑기’를 눌러 주세요.</div></div>
+    </div>
+  </section>
+</main>
+<footer>모둠 구성 결과는 무작위로 생성됩니다. 학생 간 배정 조건이나 이전 결과와의 비교는 적용하지 않습니다.</footer>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const roster = $('roster'), studentCount = $('studentCount');
+  let mode = 'groups', result = null, confirmed = false, lastSaved = null;
+  const colors = [
+    ['#e9efff','#315ee8'],['#e4f7ef','#16835d'],['#fff0df','#a75b12'],
+    ['#f6e8ff','#8746b5'],['#ffe8ed','#b83e63'],['#e2f6fb','#167a93'],
+    ['#f4f1dc','#786b17'],['#e9edf3','#4d5b70']
+  ];
+  function parseStudents() {
+    return roster.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean).map((line, i) => {
+      const m = line.match(/^(\d+)[\s,，.、]+(.+)$/);
+      return { id: i, label: m ? `${m[1]}번 ${m[2].trim()}` : line };
+    });
+  }
+  function saveDraft() {
+    try {
+      const existing = JSON.parse(localStorage.getItem('classGroupMakerState') || '{}');
+      localStorage.setItem('classGroupMakerState', JSON.stringify({
+        ...existing, roster: roster.value, mode,
+        groupCount: $('groupCount').value, groupSize: $('groupSize').value,
+        groupNames: $('groupNames').value
+      }));
+    } catch {}
+  }
+  function updateCount() {
+    studentCount.textContent = `${parseStudents().length}명`;
+    saveDraft();
+  }
+  function setMessage(msg, isError=false) {
+    $('message').textContent = msg;
+    $('message').style.color = isError ? 'var(--danger)' : 'var(--good)';
+  }
+  function setMode(next) {
+    mode = next;
+    document.querySelectorAll('.mode').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    $('groupsField').classList.toggle('hidden', mode !== 'groups');
+    $('sizeField').classList.toggle('hidden', mode !== 'size');
+    setMessage('');
+  }
+  document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  roster.addEventListener('input', updateCount);
+  ['groupCount','groupSize','groupNames'].forEach(id => $(id).addEventListener('input', saveDraft));
+  $('sampleBtn').addEventListener('click', () => {
+    roster.value = ['1 김하늘','2 이도윤','3 박서윤','4 최지우','5 정민준','6 한예린','7 오지호','8 윤서아','9 강도현','10 임수빈','11 조은우','12 배하린','13 신유준','14 문채원','15 서준호','16 김나연','17 장시우','18 이채은','19 홍지민','20 송현우','21 권유나','22 안태민','23 남서진'].join('\\n');
+    updateCount(); setMessage('예시 명단을 불러왔습니다.');
+  });
+  $('clearBtn').addEventListener('click', () => {
+    roster.value = ''; updateCount(); setMessage('명단을 지웠습니다.');
+  });
+  function getGroupCount(n) {
+    const raw = Number(mode === 'groups' ? $('groupCount').value : Math.ceil(n / Number($('groupSize').value)));
+    if (!Number.isInteger(raw) || raw < 1) throw new Error('모둠 설정에 1 이상의 정수를 입력해 주세요.');
+    if (raw > n) throw new Error(`모둠 수(${raw})가 학생 수(${n})보다 많습니다. 설정을 확인해 주세요.`);
+    if (mode === 'size') {
+      const size = Number($('groupSize').value);
+      if (!Number.isInteger(size) || size < 1) throw new Error('모둠별 인원에 1 이상의 정수를 입력해 주세요.');
+      return Math.ceil(n / size);
+    }
+    return raw;
+  }
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function buildGroups() {
+    const students = parseStudents();
+    if (!students.length) throw new Error('학생 명단을 먼저 입력해 주세요.');
+    const count = getGroupCount(students.length);
+    const names = $('groupNames').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const shuffled = shuffle(students);
+    const groups = Array.from({length: count}, (_, i) => ({
+      name: names[i] || `${i+1}모둠`, members: []
+    }));
+    if (mode === 'size') {
+      const size = Number($('groupSize').value);
+      shuffled.forEach((student, i) => groups[Math.floor(i / size)].members.push(student));
+    } else {
+      // Round-robin assignment ensures group sizes differ by at most one.
+      shuffled.forEach((student, i) => groups[i % count].members.push(student));
+    }
+    return groups;
+  }
+  function render() {
+    const area = $('resultArea');
+    area.className = '';
+    area.innerHTML = '';
+    const grid = document.createElement('div'); grid.className = 'group-grid';
+    result.forEach((group, i) => {
+      const [bg, fg] = colors[i % colors.length];
+      const card = document.createElement('article'); card.className = 'group-card';
+      const top = document.createElement('div'); top.className = 'group-top';
+      top.style.background = bg; top.style.color = fg;
+      const name = document.createElement('span'); name.textContent = group.name;
+      const count = document.createElement('small'); count.textContent = `${group.members.length}명`;
+      top.append(name, count);
+      const list = document.createElement('ol'); list.className = 'member-list';
+      group.members.forEach((student, j) => {
+        const li = document.createElement('li');
+        const num = document.createElement('span'); num.className = 'num'; num.textContent = `${j+1}.`;
+        const label = document.createElement('span'); label.textContent = student.label;
+        li.append(num, label); list.append(li);
+      });
+      card.append(top, list); grid.append(card);
+    });
+    area.append(grid);
+    $('resultSummary').textContent = `${result.length}개 모둠 · ${result.reduce((n,g)=>n+g.members.length,0)}명`;
+    $('status').textContent = confirmed ? '확정 완료' : '확정 전';
+    $('status').classList.toggle('done', confirmed);
+    ['redrawBtn','confirmBtn','copyBtn','csvBtn','printBtn'].forEach(id => $(id).disabled = false);
+    $('confirmBtn').disabled = confirmed;
+  }
+  function draw() {
+    try {
+      result = buildGroups(); confirmed = false; lastSaved = null; render();
+      setMessage('새로운 모둠을 뽑았습니다. 결과를 확인한 뒤 확정해 주세요.');
+    } catch (e) { setMessage(e.message, true); }
+  }
+  function plainText() {
+    return result.map(g => `${g.name} (${g.members.length}명)\n${g.members.map((s,i)=>`  ${i+1}. ${s.label}`).join('\n')}`).join('\n\n');
+  }
+  function download(filename, content, type) {
+    const blob = new Blob(['\ufeff', content], {type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename;
+    document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+  $('drawBtn').addEventListener('click', draw);
+  $('redrawBtn').addEventListener('click', draw);
+  $('confirmBtn').addEventListener('click', () => {
+    if (!result) return;
+    confirmed = true; lastSaved = JSON.stringify({result, confirmed: true, roster: roster.value, mode, groupCount: $('groupCount').value, groupSize: $('groupSize').value, groupNames: $('groupNames').value});
+    try { localStorage.setItem('classGroupMakerState', lastSaved); } catch {}
+    render(); setMessage('결과를 확정했습니다. 이 브라우저에 저장했습니다.');
+  });
+  $('copyBtn').addEventListener('click', async () => {
+    if (!result) return;
+    try {
+      await navigator.clipboard.writeText(plainText()); setMessage('결과를 클립보드에 복사했습니다.');
+    } catch {
+      const ta = document.createElement('textarea'); ta.value = plainText(); document.body.append(ta); ta.select();
+      const ok = document.execCommand('copy'); ta.remove();
+      setMessage(ok ? '결과를 복사했습니다.' : '복사에 실패했습니다. 결과를 선택해 복사해 주세요.', !ok);
+    }
+  });
+  $('csvBtn').addEventListener('click', () => {
+    if (!result) return;
+    const esc = v => `"${String(v).replace(/"/g,'""')}"`;
+    const rows = [['모둠','학생'], ...result.flatMap(g => g.members.map(s => [g.name, s.label]))];
+    download('모둠_배정_결과.csv', rows.map(r=>r.map(esc).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
+    setMessage('CSV 파일 저장을 시작했습니다.');
+  });
+  $('printBtn').addEventListener('click', () => { if (result) window.print(); });
+  function restore() {
+    try {
+      const raw = localStorage.getItem('classGroupMakerState');
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (!state || !Array.isArray(state.result)) return;
+      roster.value = state.roster || '';
+      $('groupCount').value = state.groupCount || 6;
+      $('groupSize').value = state.groupSize || 4;
+      $('groupNames').value = state.groupNames || '';
+      setMode(state.mode === 'size' ? 'size' : 'groups');
+      result = state.result; confirmed = true; updateCount(); render();
+      setMessage('이전에 확정한 결과를 복원했습니다.');
+    } catch {}
+  }
+  updateCount(); restore();
+})();
+</script>
+</body>
+</html>
